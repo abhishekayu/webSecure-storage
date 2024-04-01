@@ -1,6 +1,6 @@
 # webSecure-storage 🔒
 
-**webSecure-storage** is a simple-to-use package that provides a secure way to store data in various storage mediums such as local storage, session storage, cookies, and indexedDB. It employs encryption techniques to safeguard data and prevents common attacks while also offering features like validating **Verifying keys**.
+**webSecure-storage** is a user-friendly package designed to facilitate secure data storage across multiple mediums including local storage, session storage, cookies, and indexedDB. Leveraging encryption techniques, it ensures data security and mitigates common attacks. Additionally, it offers features for verifying keys and compressing data, thereby enhancing both security and efficiency.
 
 ## Features
 
