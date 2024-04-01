@@ -48,7 +48,7 @@ ayu.localStorage.setHmacKey("YourHMACKey");
 
 **Mandatory Parameters:** The key and data parameters are mandatory for item storage.
 
-**Passcode Requirement:** If you haven't set the passcode using `setPasscode`, you must provide it when storing an item. However, if you've set it using `setPasscode` then you don't need to provide it again. Similarly, if the HMAC key is your passcode by default, you don't need to pass it separately however if you want to set your own HMAC key for each item then you have to pass it here
+**Passcode Requirement:** If you haven't set the passcode using `setPasscode`, you must provide it when storing an item. However, if you've set it using `setPasscode` then you don't need to provide it again. Similarly, if the HMAC key is your passcode by default, you don't need to pass it separately however if you want to set your own HMAC key for each item then you have to pass it.
 
 ## More Optional Parameters:
 
@@ -74,7 +74,7 @@ ayu.localStorage.setItem({
 
 ### Getting data from in localStorage
 
-**Optional Parameters for Retrieval:** When retrieving an item, the algorithm (algo) and HMAC key are optional. By default, the algorithm is AES, and if you've set the HMAC key while storing the item, you need to pass it here.
+**Optional Parameters for Retrieval:** When retrieving an item, the algorithm (algo) and HMAC key are optional. By default, the algorithm is AES, and if you've set the HMAC key while storing the item, you need to pass it.
 
 **Passcode Requirement:** Providing the passcode is mandatory for item retrieval. If you haven't set it using setPasscode, you must pass it here. Additionally, ensure consistency between the passcode used for setItem and getItem.
 
@@ -543,6 +543,7 @@ Abhishek Verma
 ## Important: For any Queries, Suggestions, or Improvements
 
 If you have any questions, feedback, or ideas for improvement, please don't hesitate to raise an issue or submit a pull request on GitHub. Your input is highly valued and helps to enhance this project for everyone. Thank you for your contribution!
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details. [MIT](https://choosealicense.com/licenses/mit/)
