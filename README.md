@@ -23,14 +23,14 @@ The Advanced Encryption Standard is a symmetric encryption algorithm that is the
 ## Installation 💻
 
 ```bash
-npm install webSecure-storage
+npm install secured-storage-web
 ```
 
 ## Usage 🚀
 
 ```javascript
 Import the package
-import { ayu } from "webSecure-storage";
+import { ayu } from "secured-storage-web";
 
 ```
 
