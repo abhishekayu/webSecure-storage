@@ -1,10 +1,10 @@
 # webSecure-storage 🔒
 
-**webSecure-storage** is a simple-to-use package that provides a secure way to store data in various storage mediums such as local storage, session storage, cookies, and indexedDB. It employs encryption techniques to safeguard data and prevents common attacks while also offering features like validating **HMAC keys**.
+**webSecure-storage** is a simple-to-use package that provides a secure way to store data in various storage mediums such as local storage, session storage, cookies, and indexedDB. It employs encryption techniques to safeguard data and prevents common attacks while also offering features like validating **Verifying keys**.
 
 ## Features
 
-- **webSecure-storage** provides more secure operations to customize data storage and retrieval by offering passcode, HMAC key, algorithm, compression, and expiry time, and simpler default operations for storage.
+- **webSecure-storage** provides more secure operations to customize data storage and retrieval by offering passcode, HMAC key, algorithm, compression, and expiry time, and Similar default operations for storage.
 - Additionally, this package provides a simple way to get events of local storage, session storage, cookies, and indexedDB to detect changes in storage, handle expired data, and get/set data from storage.
 - Algorithm supported: **AES**, **DES**, **RC4**, **Rabbit**, **RabbitLegacy**, **TripleDES**, **EvpKDF**, **PBKDF2**, and **RC4Drop**.
 
@@ -89,7 +89,7 @@ console.log(data);
 
 ### Remove Item from localStorage
 
-For removing the item key is mendatory.
+For removing the item key is mandatory.
 and to be secure we overwrite the data with random string 10 times and then remove the item.
 
 ```javascript
@@ -163,11 +163,11 @@ Similar to local storage's approach you can set the item in session storage by u
 ayu.sessionStorage.setItem({
   key: "Your Key", //key
   data: "Your Data", // data
-  passcode: "Your Passcode", // Info : Read localStorage, simpler to localStorage.
-  algo: "Your Algo", // Info : Read localStorage, simpler to localStorage.
-  hmacKey: "Your HmacKey", // Info : Read localStorage, simpler to localStorage.
-  compress: true, // Info : Read localStorage, simpler to localStorage.
-  expireAt: 5000, // Info : Read localStorage, simpler to localStorage.
+  passcode: "Your Passcode", // Info : Read localStorage, Similar to localStorage.
+  algo: "Your Algo", // Info : Read localStorage, Similar to localStorage.
+  hmacKey: "Your HmacKey", // Info : Read localStorage, Similar to localStorage.
+  compress: true, // Info : Read localStorage, Similar to localStorage.
+  expireAt: 5000, // Info : Read localStorage, Similar to localStorage.
 });
 ```
 
@@ -178,9 +178,9 @@ Similar to local storage you can get the item from session storage by using same
 ```javascript
 let dataSession = ayu.sessionStorage.getItem({
   key: "Your Key", //key
-  passcode: "Your Passcode", // Read localStorage, simpler to localStorage.
-  algo: "Your Algo", // Read localStorage, simpler to localStorage.
-  hmacKey: "Your Hmackey", // Read localStorage, simpler to localStorage.
+  passcode: "Your Passcode", // Read localStorage, Similar to localStorage.
+  algo: "Your Algo", // Read localStorage, Similar to localStorage.
+  hmacKey: "Your Hmackey", // Read localStorage, Similar to localStorage.
 });
 
 console.log(dataSession);
@@ -188,7 +188,7 @@ console.log(dataSession);
 
 ### Remove Item from sessionStorage
 
-For removing the item key is mendatory.
+For removing the item key is mandatory.
 and to be secure we overwrite the data with random string 10 times and then remove the item.
 
 ```javascript
@@ -263,11 +263,11 @@ Similar to local storage's approach you can set the item in cookies by using sam
 ayu.cookies.setItem({
   key: "Your Key",
   data: "Your Data",
-  expireAt: 9000, // Info : Read localStorage,
-  passcode: "Your Passcode", // Info : Read localStorage,
-  algo: "Your Algo", // Info : Read localStorage,
-  hmacKey: "Your HmacKey", // Info : Read localStorage,
-  compress: false, // Info : Read localStorage,
+  expireAt: 9000, // Info : Similar to localStorage,
+  passcode: "Your Passcode", // Info : Similar to localStorage,
+  algo: "Your Algo", // Info : Similar to localStorage,
+  hmacKey: "Your HmacKey", // Info : Similar to localStorage,
+  compress: false, // Info : Similar to localStorage,
 });
 ```
 
@@ -278,9 +278,9 @@ Similar to local storage's approach you can set the item in cookies by using sam
 ```javascript
 let datacookie = ayu.cookies.getItem({
   key: "Your Key",
-  passcode: "Your Passcode", // Info : Read localStorage,
-  algo: "Your Algo", // Info : Read localStorage,
-  hmacKey: "Your HmacKey", // Info : Read localStorage,
+  passcode: "Your Passcode", // Info : Similar to localStorage,
+  algo: "Your Algo", // Info : Similar to localStorage,
+  hmacKey: "Your HmacKey", // Info : Similar to localStorage,
 });
 
 console.log(datacookie);
@@ -344,11 +344,11 @@ ayu.indexedDB
     storeName: "YourStoreName",
     key: "uniqueKey",
     data: { Your: data },
-    compress: true, // Info : Read localStorage,
-    expireAt: 5000, // Info : Read localStorage,
-    passcode: "Your Passcode", // Info : Read localStorage,
-    algo: "Your Algo", // Info : Read localStorage,
-    hmacKey: "Your HmacKey", // Info : Read localStorage,
+    compress: true, // Info : Similar to localStorage,
+    expireAt: 5000, // Info : Similar to localStorage,
+    passcode: "Your Passcode", // Info : Similar to localStorage,
+    algo: "Your Algo", // Info : Similar to localStorage,
+    hmacKey: "Your HmacKey", // Info : Similar to localStorage,
   })
   .then(() => {
     console.log("Item set successfully.");
@@ -368,9 +368,9 @@ ayu.indexedDB
     dbName: "YourDatabaseName",
     storeName: "YourStoreName",
     key: "uniqueKey",
-    passcode: "Your Passcode", // Info : Read localStorage,
-    algo: "Your Algo", // Info : Read localStorage,
-    hmacKey: "Your Hmackey", // Info : Read localStorage,
+    passcode: "Your Passcode", // Info : Similar to localStorage,
+    algo: "Your Algo", // Info : Similar to localStorage,
+    hmacKey: "Your Hmackey", // Info : Similar to localStorage,
   })
   .then((decryptedData) => {
     console.log("Decrypted data:", decryptedData);
@@ -395,11 +395,11 @@ const setItemPromises = itemsToSet.map((item) => {
     storeName: "YourStoreName",
     key: item.key,
     data: item.data,
-    compress: true, // Info : Read localStorage,
-    expireAt: 3600 * 1000, // Info : Read localStorage,
-    passcode: "Your Passcode", // Info : Read localStorage,
-    algo: "Your Algo", // Info : Read localStorage,
-    hmacKey: "Your Hmackey", // Info : Read localStorage,
+    compress: true, // Info : Similar to localStorage,
+    expireAt: 3600 * 1000, // Info : Similar to localStorage,
+    passcode: "Your Passcode", // Info : Similar to localStorage,
+    algo: "Your Algo", // Info : Similar to localStorage,
+    hmacKey: "Your Hmackey", // Info : Similar to localStorage,
   });
 });
 
@@ -422,9 +422,9 @@ const getItemPromises = keysToRetrieve.map((key) => {
     dbName: "YourDatabaseName",
     storeName: "YourStoreName",
     key: key,
-    passcode: "Your Passcode",     // Info : Read localStorage,
-    algo: "Your Algo",       // Info : Read localStorage,
-    hmacKey: "Your Hmackey",     // Info : Read localStorage,
+    passcode: "Your Passcode",     // Info : Similar to localStorage,
+    algo: "Your Algo",       // Info : Similar to localStorage,
+    hmacKey: "Your Hmackey",     // Info : Similar to localStorage,
     });
 });
 
@@ -526,8 +526,18 @@ ayu.on("onIndexedDBDeleted", (dbName, storeName) => {
 
 Abhishek Verma
 
-📧 abhishek@example.com
+📧 imdarkcoder@gmail.com.com
 
+<a href="mailto:imdarkcoder@gmail.com" target="_blank">
+  <img src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="email"/>
+</a>
+ <a href="https://www.linkedin.com/in/abhishek-ayu/" target="_blank">
+  <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="abhishekayu"/>
+ </a> 
+
+## Important: For any Queries, Suggestions, or Improvements
+
+If you have any questions, feedback, or ideas for improvement, please don't hesitate to raise an issue or submit a pull request on GitHub. Your input is highly valued and helps to enhance this project for everyone. Thank you for your contribution!
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details. [MIT](https://choosealicense.com/licenses/mit/)
