@@ -544,6 +544,11 @@ Abhishek Verma
 
 If you have any questions, feedback, or ideas for improvement, please don't hesitate to raise an issue or submit a pull request on GitHub. Your input is highly valued and helps to enhance this project for everyone. Thank you for your contribution!
 
+## Contribute
+
+Contributions are always welcome!
+Please read the [contribution guidelines](contributing.md) first.
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details. [MIT](https://choosealicense.com/licenses/mit/)
