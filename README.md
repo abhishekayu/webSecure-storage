@@ -1,6 +1,6 @@
 # webSecure-storage 🔒
 
-**webSecure-storage** is a user-friendly package designed to facilitate secure data storage across multiple mediums including local storage, session storage, cookies, and indexedDB. Leveraging encryption techniques, it ensures data security and mitigates common attacks. Additionally, it offers features for integrity checks to ensure data consistency and prevent corruption and compressing data, thereby enhancing both security and efficiency.
+**webSecure-storage** is a user-friendly package designed to facilitate secure data storage across multiple mediums including local storage, session storage, cookies, and indexedDB. Leveraging encryption techniques, it ensures data security and mitigates common attacks. Additionally, it offers features for integrity checks to ensure data consistency and prevent corruption and compressing data and hashing, thereby enhancing both security and efficiency.
 
 ## Features
 
@@ -11,7 +11,7 @@
 - **Expiry for Storage:** You can set an expiration time for data by providing the time in milliseconds. Once expired, the data is removed.
 - **Separate Configuration for Each Item:** You can set passcodes and HMAC keys separately for each item. When retrieving an item, you need to provide the passcode and HMAC key.
 - **Global Configuration for Storage:** You can set a global passcode and HMAC key for the entire storage system. **Note:** Each storage medium and method (such as localStorage, sessionStorage, etc.) is treated separately.
-- **Data Integrity Checks:** Implement checksums or other integrity checks to ensure data consistency and prevent corruption.
+- **Data Integrity Checks:** Implement checksums or other integrity checks to ensure data consistency and prevent corruption using hashing.
 - **Simple IndexDB Manipulation with Encrypted Data:** Offer a straightforward method to manage IndexedDB similar to localStorage. Allow storing data in IndexedDB as encrypted and compressed data for enhanced security and efficiency.
 - **Events for Each Storage and Every Event:** Fire events for every storage type, including IndexedDB and cookies etc. Trigger events based on various data-related actions such as expiration, setting, getting, removal, etc.
 - Our default encryption and decryption algorithm is AES.
