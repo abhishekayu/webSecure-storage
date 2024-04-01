@@ -6,8 +6,13 @@
 
 - **webSecure-storage** provides more secure operations to customize data storage and retrieval by offering passcode, HMAC key, algorithm, compression, and expiry time, and Similar default operations for storage.
 - Additionally, this package provides a simple way to get events of local storage, session storage, cookies, and indexedDB to detect changes in storage, handle expired data, and get/set data from storage.
-- Algorithm supported: **AES**, **DES**, **RC4**, **Rabbit**, **RabbitLegacy**, **TripleDES**, **EvpKDF**, **PBKDF2**, and **RC4Drop**.
-
+- **Data Compression:** Provide data compression parameters to compress data while storing it; you can manipulate them.
+- **Algorithm supported:** **AES**, **DES**, **RC4**, **Rabbit**, **RabbitLegacy**, **TripleDES**, **EvpKDF**, **PBKDF2**, and **RC4Drop**.
+- **Expiry for Storage:** You can set an expiration time for data by providing the time in milliseconds. Once expired, the data is removed.
+- **Separate Configuration for Each Item:** You can set passcodes and HMAC keys separately for each item. When retrieving an item, you need to provide the passcode and HMAC key.
+- **Global Configuration for Storage:** You can set a global passcode and HMAC key for the entire storage system. **Note:** Each storage medium and method (such as localStorage, sessionStorage, etc.) is treated separately.
+- **Simple IndexDB Manipulation with Encrypted Data:** Offer a straightforward method to manage IndexedDB similar to localStorage. Allow storing data in IndexedDB as encrypted and compressed data for enhanced security and efficiency.
+- **Events for Each Storage and Every Event:** Fire events for every storage type, including IndexedDB and cookies etc. Trigger events based on various data-related actions such as expiration, setting, getting, removal, etc.
 - Our default encryption and decryption algorithm is AES.
 
 #### Advanced Encryption Standard (AES)
