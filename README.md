@@ -551,7 +551,7 @@ If you have any questions, feedback, or ideas for improvement, please don't hesi
 ## Contribute
 
 Contributions are always welcome!
-Please read the [contribution guidelines](contributing.md) first.
+Please read the [contribution guidelines](https://github.com/jessesquires/.github/blob/main/CONTRIBUTING.md) first.
 
 ## License
 
