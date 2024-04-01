@@ -1,5 +1,5 @@
 {
-  "name": "webSecure-storage",
+  "name": "secured-storage-web",
   "version": "1.0.0",
   "description": "A package for securing storage of web applications via encryption for localStorage, sessionStorage, cookies, and IndexedDB. It is customizable and easy to use, similar to default operations.",
   "main": "index.js",
@@ -126,7 +126,10 @@
     "webSecure-storage secure storage operations",
     "localStorage encryption",
     "localStorage security",
-    "web"
+    "web",
+    "secured-storage-web",
+    "secured web",
+    "secured web"
   ],
   "author": "Abhishek Verma",
   "license": "MIT",
