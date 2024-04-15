@@ -532,8 +532,6 @@ ayu.on("onIndexedDBDeleted", (dbName, storeName) => {
 
 Abhishek Verma
 
-📧 imdarkcoder@gmail.com.com
-
 <a href='https://github.com/abhishekayu' target="_blank">
 <img alt='Github' src='https://img.shields.io/badge/github-100000?style=for-the-badge&logo=Github&logoColor=white&labelColor=black&color=black'/>
 </a>
