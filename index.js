@@ -1,406 +1,523 @@
-const CryptoJS = require("crypto-js"),
-  pako = require("pako"),
-  { encryptData, decryptData } = require("./encrypt"),
-  openDB = require("idb")["openDB"];
-let GLencryptionKey,
-  GLhmacKey,
-  GLsessionStorageEncryptionKey,
-  GLsessionStorageHmacKey,
-  GLcookieEncryptionKey,
-  GLcookieHmacKey,
-  GLindexedDBEncryptionKey,
-  GLindexedDBHmacKey;
-function generateRandomString(t) {
-  var r =
+const CryptoJS = require("crypto-js");
+const pako = require("pako");
+const { encryptData, decryptData } = require("./encrypt");
+const { openDB } = require("idb");
+let GLencryptionKey;
+let GLhmacKey;
+let GLsessionStorageEncryptionKey;
+let GLsessionStorageHmacKey;
+let GLcookieEncryptionKey;
+let GLcookieHmacKey;
+let GLindexedDBEncryptionKey;
+let GLindexedDBHmacKey;
+function generateRandomString(length) {
+  const characters =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZab-AYU-cdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+{}[]|:;<>,.?/`~";
-  let o = "";
-  for (let e = 0; e < t; e++)
-    o += r.charAt(Math.floor(Math.random() * r.length));
-  return o;
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
 }
+
 const ayu = {
   localStorage: {
-    setPasscode(e) {
-      GLencryptionKey = e;
+    setPasscode(key) {
+      GLencryptionKey = key;
     },
-    setHmacKey(e) {
-      GLhmacKey = e;
+    setHmacKey(key) {
+      GLhmacKey = key;
     },
     setItem({
-      key: t,
-      data: r,
-      compress: o = !0,
-      passcode: a = GLencryptionKey,
-      algo: n = "AES",
-      hmacKey: i = GLhmacKey || a,
-      expireAt: c = null,
+      key,
+      data,
+      compress = true,
+      passcode = GLencryptionKey,
+      algo = "AES",
+      hmacKey = GLhmacKey ? GLhmacKey : passcode,
+      expireAt = null,
     }) {
       try {
-        let e = r;
-        o && (e = pako.deflate(JSON.stringify(r)));
-        var s = encryptData(e, a, n);
-        (m = CryptoJS.HmacSHA256(s, i).toString()),
-          (d = new Date().getTime()),
-          (l = c ? d + c : null);
+        let compressedData = data;
+        if (compress) {
+          compressedData = pako.deflate(JSON.stringify(data));
+        }
+        const encryptedData = encryptData(compressedData, passcode, algo);
+        const hmac = CryptoJS.HmacSHA256(encryptedData, hmacKey).toString();
+
+        const currentTime = new Date().getTime();
+        const expireTime = expireAt ? currentTime + expireAt : null;
+
         localStorage.setItem(
-          t,
-          JSON.stringify({ data: s, hmac: m, compressed: o, expireTime: l })
-        ),
-          ayu.events.emit("onLocalStoreSet", t, r);
-      } catch (e) {
-        throw new Error("Error occurred while setting localStorage item:", e);
+          key,
+          JSON.stringify({
+            data: encryptedData,
+            hmac,
+            compressed: compress,
+            expireTime,
+          })
+        );
+
+        ayu.events.emit("onLocalStoreSet", key, data);
+      } catch (error) {
+        throw new Error(
+          "Error occurred while setting localStorage item:",
+          error
+        );
       }
     },
     getItem({
-      key: e,
-      passcode: t = GLencryptionKey,
-      algo: r = "AES",
-      hmacKey: o = GLhmacKey || t,
+      key,
+      passcode = GLencryptionKey,
+      algo = "AES",
+      hmacKey = GLhmacKey ? GLhmacKey : passcode,
     }) {
       try {
-        var a = localStorage.getItem(e);
-        if (!a) return null;
-        var { data: n, hmac: i, compressed: c, expireTime: s } = JSON.parse(a),
-          m = new Date().getTime();
-        if (null !== s && s < m)
-          return (
-            localStorage.removeItem(e),
-            ayu.events.emit("onLocalStoreExpired", e),
-            null
-          );
-        if (CryptoJS.HmacSHA256(n, o).toString() !== i)
+        const storedItem = localStorage.getItem(key);
+        if (!storedItem) return null;
+
+        const { data, hmac, compressed, expireTime } = JSON.parse(storedItem);
+
+        const currentTime = new Date().getTime();
+
+        if (expireTime !== null && currentTime > expireTime) {
+          localStorage.removeItem(key);
+          ayu.events.emit("onLocalStoreExpired", key);
+          return null;
+        }
+        const calculatedHmac = CryptoJS.HmacSHA256(data, hmacKey).toString();
+        if (calculatedHmac !== hmac) {
           throw new Error(
             "HMAC verification failed of localStorage. Data may have been tampered with."
           );
-        var d = decryptData(n, t, r);
-        return (
-          ayu.events.emit("onLocalStoreGet", e, n),
-          c ? JSON.parse(pako.inflate(d, { to: "string" })) : d
+        }
+        const decryptedData = decryptData(data, passcode, algo);
+        ayu.events.emit("onLocalStoreGet", key, data);
+        if (compressed) {
+          return JSON.parse(pako.inflate(decryptedData, { to: "string" }));
+        } else {
+          return decryptedData;
+        }
+      } catch (error) {
+        throw new Error(
+          "Error occurred while getting localStorage item:",
+          error
         );
-      } catch (e) {
-        throw new Error("Error occurred while getting localStorage item:", e);
       }
     },
-    removeItem(t) {
+    removeItem(key) {
       try {
-        if (localStorage.getItem(t)) {
-          for (let e = 0; e < 10; e++) {
-            var r = generateRandomString(30);
-            localStorage.setItem(t, r);
-          }
-          localStorage.removeItem(t), ayu.events.emit("onLocalStoreRemoved", t);
+        const encryptedData = localStorage.getItem(key);
+        if (!encryptedData) return;
+        for (let i = 0; i < 10; i++) {
+          let randomString = generateRandomString(30);
+          localStorage.setItem(key, randomString);
         }
-      } catch (e) {
-        throw new Error("Error occurred while removing localStorage item:", e);
+        localStorage.removeItem(key);
+        ayu.events.emit("onLocalStoreRemoved", key);
+      } catch (error) {
+        throw new Error(
+          "Error occurred while removing localStorage item:",
+          error
+        );
       }
     },
     clear() {
       try {
-        var e = Object.keys(localStorage);
-        e.forEach((e) => {
-          var t = generateRandomString(30);
-          localStorage.setItem(e, t);
-        }),
-          localStorage.clear(),
-          e.forEach((e) => ayu.events.emit("onLocalStoreRemoved", e));
-      } catch (e) {
-        throw new Error("Error occurred while clearing localStorage:", e);
+        const keys = Object.keys(localStorage);
+        keys.forEach((key) => {
+          let randomString = generateRandomString(30);
+          localStorage.setItem(key, randomString);
+        });
+        localStorage.clear();
+        keys.forEach((key) => ayu.events.emit("onLocalStoreRemoved", key));
+      } catch (error) {
+        throw new Error("Error occurred while clearing localStorage:", error);
       }
     },
   },
   sessionStorage: {
-    setPasscode(e) {
-      GLsessionStorageEncryptionKey = e;
+    setPasscode(key) {
+      GLsessionStorageEncryptionKey = key;
     },
-    setHmacKey(e) {
-      GLsessionStorageHmacKey = e;
+    setHmacKey(key) {
+      GLsessionStorageHmacKey = key;
     },
     setItem({
-      key: t,
-      data: r,
-      compress: o = !0,
-      passcode: a = GLsessionStorageEncryptionKey,
-      algo: n = "AES",
-      hmacKey: i = GLsessionStorageHmacKey || a,
-      expireAt: c = null,
+      key,
+      data,
+      compress = true,
+      passcode = GLsessionStorageEncryptionKey,
+      algo = "AES",
+      hmacKey = GLsessionStorageHmacKey ? GLsessionStorageHmacKey : passcode,
+      expireAt = null,
     }) {
       try {
-        let e = r;
-        o && (e = pako.deflate(JSON.stringify(r)));
-        var s = encryptData(e, a, n),
-          m = CryptoJS.HmacSHA256(s, i).toString(),
-          d = new Date().getTime(),
-          l = c ? d + c : null;
+        let compressedData = data;
+        if (compress) {
+          compressedData = pako.deflate(JSON.stringify(data));
+        }
+        const encryptedData = encryptData(compressedData, passcode, algo);
+        const hmac = CryptoJS.HmacSHA256(encryptedData, hmacKey).toString();
+
+        const currentTime = new Date().getTime();
+        const expireTime = expireAt ? currentTime + expireAt : null;
+
         sessionStorage.setItem(
-          t,
-          JSON.stringify({ data: s, hmac: m, compressed: o, expireTime: l })
-        ),
-          ayu.events.emit("onSessionStoreSet", t, r);
-      } catch (e) {
-        throw new Error("Error occurred while setting SessionStorage item:", e);
+          key,
+          JSON.stringify({
+            data: encryptedData,
+            hmac,
+            compressed: compress,
+            expireTime,
+          })
+        );
+
+        ayu.events.emit("onSessionStoreSet", key, data);
+      } catch (error) {
+        throw new Error(
+          "Error occurred while setting SessionStorage item:",
+          error
+        );
       }
     },
     getItem({
-      key: e,
-      passcode: t = GLsessionStorageEncryptionKey,
-      algo: r = "AES",
-      hmacKey: o = GLsessionStorageHmacKey || t,
+      key,
+      passcode = GLsessionStorageEncryptionKey,
+      algo = "AES",
+      hmacKey = GLsessionStorageHmacKey ? GLsessionStorageHmacKey : passcode,
     }) {
       try {
-        var a = sessionStorage.getItem(e);
-        if (!a) return null;
-        var { data: n, hmac: i, compressed: c, expireTime: s } = JSON.parse(a),
-          m = new Date().getTime();
-        if (null !== s && s < m)
-          return (
-            sessionStorage.removeItem(e),
-            ayu.events.emit("onSessionStoreExpired", e),
-            null
-          );
-        if (CryptoJS.HmacSHA256(n, o).toString() !== i)
+        const storedItem = sessionStorage.getItem(key);
+        if (!storedItem) return null;
+
+        const { data, hmac, compressed, expireTime } = JSON.parse(storedItem);
+
+        const currentTime = new Date().getTime();
+
+        if (expireTime !== null && currentTime > expireTime) {
+          sessionStorage.removeItem(key);
+          ayu.events.emit("onSessionStoreExpired", key);
+          return null;
+        }
+        const calculatedHmac = CryptoJS.HmacSHA256(data, hmacKey).toString();
+        if (calculatedHmac !== hmac) {
           throw new Error(
             "HMAC verification failed of SessionStorage. Data may have been tampered with."
           );
-        var d = decryptData(n, t, r);
-        return (
-          ayu.events.emit("onSessionStoreGet", e, n),
-          c ? JSON.parse(pako.inflate(d, { to: "string" })) : d
+        }
+        const decryptedData = decryptData(data, passcode, algo);
+        ayu.events.emit("onSessionStoreGet", key, data);
+        if (compressed) {
+          return JSON.parse(pako.inflate(decryptedData, { to: "string" }));
+        } else {
+          return decryptedData;
+        }
+      } catch (error) {
+        throw new Error(
+          "Error occurred while getting SessionStorage item:",
+          error
         );
-      } catch (e) {
-        throw new Error("Error occurred while getting SessionStorage item:", e);
       }
     },
-    removeItem(t) {
+
+    removeItem(key) {
       try {
-        if (sessionStorage.getItem(t)) {
-          for (let e = 0; e < 10; e++) {
-            var r = generateRandomString(30);
-            sessionStorage.setItem(t, r);
-          }
-          sessionStorage.removeItem(t),
-            ayu.events.emit("onSessionStoreRemoved", t);
+        const encryptedData = sessionStorage.getItem(key);
+        if (!encryptedData) return;
+        for (let i = 0; i < 10; i++) {
+          let randomString = generateRandomString(30);
+          sessionStorage.setItem(key, randomString);
         }
-      } catch (e) {
+        sessionStorage.removeItem(key);
+        ayu.events.emit("onSessionStoreRemoved", key);
+      } catch (error) {
         throw new Error(
           "Error occurred while removing SessionStorage item:",
-          e
+          error
         );
       }
     },
     clear() {
       try {
-        var e = Object.keys(sessionStorage);
-        e.forEach((e) => {
-          var t = generateRandomString(30);
-          sessionStorage.setItem(e, t);
-        }),
-          sessionStorage.clear(),
-          e.forEach((e) => ayu.events.emit("onSessionStoreRemoved", e));
-      } catch (e) {
-        throw new Error("Error occurred while clearing SessionStorage:", e);
+        const keys = Object.keys(sessionStorage);
+        keys.forEach((key) => {
+          let randomString = generateRandomString(30);
+          sessionStorage.setItem(key, randomString);
+        });
+        sessionStorage.clear();
+        keys.forEach((key) => ayu.events.emit("onSessionStoreRemoved", key));
+      } catch (error) {
+        throw new Error("Error occurred while clearing SessionStorage:", error);
       }
     },
   },
+
   cookies: {
-    setPasscode(e) {
-      GLcookieEncryptionKey = e;
+    setPasscode(key) {
+      GLcookieEncryptionKey = key;
     },
-    setHmacKey(e) {
-      GLcookieHmacKey = e;
+    setHmacKey(key) {
+      GLcookieHmacKey = key;
     },
     setItem({
-      key: t,
-      data: r,
-      compress: o = !0,
-      passcode: a = GLcookieEncryptionKey,
-      algo: n = "AES",
-      hmacKey: i = GLcookieHmacKey || a,
-      expireAt: c = null,
+      key,
+      data,
+      compress = true,
+      passcode = GLcookieEncryptionKey,
+      algo = "AES",
+      hmacKey = GLcookieHmacKey ? GLcookieHmacKey : passcode,
+      expireAt = null,
     }) {
       try {
-        let e = r;
-        o && (e = pako.deflate(JSON.stringify(r)));
-        var s = encryptData(e, a, n),
-          m = CryptoJS.HmacSHA256(s, i).toString(),
-          d = new Date().getTime(),
-          l = c ? d + parseInt(c) : null,
-          y = l ? new Date(l).toUTCString() : "";
-        (document.cookie = `${t}=${JSON.stringify({
-          data: s,
-          hmac: m,
-          compressed: o,
-          expireTime: l,
-        })}; expires=${y}; path=/`),
-          ayu.events.emit("onCookieStoreSet", t, r);
-      } catch (e) {
-        throw new Error("Error occurred while setting Cookie item:", e);
+        let compressedData = data;
+        if (compress) {
+          compressedData = pako.deflate(JSON.stringify(data));
+        }
+        const encryptedData = encryptData(compressedData, passcode, algo);
+        const hmac = CryptoJS.HmacSHA256(encryptedData, hmacKey).toString();
+
+        const currentTime = new Date().getTime();
+        const expireTime = expireAt ? currentTime + parseInt(expireAt) : null;
+        const expireUTC = expireTime ? new Date(expireTime).toUTCString() : "";
+
+        document.cookie = `${key}=${JSON.stringify({
+          data: encryptedData,
+          hmac,
+          compressed: compress,
+          expireTime,
+        })}; expires=${expireUTC}; path=/`;
+
+        ayu.events.emit("onCookieStoreSet", key, data);
+      } catch (error) {
+        throw new Error("Error occurred while setting Cookie item:", error);
       }
     },
     getItem({
-      key: t,
-      passcode: e = GLcookieEncryptionKey,
-      algo: r = "AES",
-      hmacKey: o = GLcookieHmacKey || e,
+      key,
+      passcode = GLcookieEncryptionKey,
+      algo = "AES",
+      hmacKey = GLcookieHmacKey ? GLcookieHmacKey : passcode,
     }) {
       try {
-        var a = document.cookie.split("; ").find((e) => e.startsWith(t + "="));
-        if (!a) return null;
-        var { data: n, hmac: i, compressed: c } = JSON.parse(a.split("=")[1]);
-        if (CryptoJS.HmacSHA256(n, o).toString() !== i)
+        const cookieString = document.cookie
+          .split("; ")
+          .find((row) => row.startsWith(`${key}=`));
+
+        if (!cookieString) return null;
+
+        const { data, hmac, compressed, expireTime } = JSON.parse(
+          cookieString.split("=")[1]
+        );
+
+        const calculatedHmac = CryptoJS.HmacSHA256(data, hmacKey).toString();
+        if (calculatedHmac !== hmac) {
           throw new Error(
             "HMAC verification failed of Cookie. Data may have been tampered with."
           );
-        var s = decryptData(n, e, r);
-        return (
-          ayu.events.emit("onCookieStoreGet", t, n),
-          c ? JSON.parse(pako.inflate(s, { to: "string" })) : s
-        );
-      } catch (e) {
-        throw new Error("Error occurred while getting Cookie item:", e);
+        }
+
+        const decryptedData = decryptData(data, passcode, algo);
+        ayu.events.emit("onCookieStoreGet", key, data);
+
+        if (compressed) {
+          return JSON.parse(pako.inflate(decryptedData, { to: "string" }));
+        } else {
+          return decryptedData;
+        }
+      } catch (error) {
+        throw new Error("Error occurred while getting Cookie item:", error);
       }
     },
-    removeItem(e) {
+
+    removeItem(key) {
       try {
-        (document.cookie =
-          e + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/"),
-          ayu.events.emit("onCookieStoreRemoved", e);
-      } catch (e) {
-        throw new Error("Error occurred while removing Cookie item:", e);
+        document.cookie = `${key}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+        ayu.events.emit("onCookieStoreRemoved", key);
+      } catch (error) {
+        throw new Error("Error occurred while removing Cookie item:", error);
       }
     },
     clear() {
       try {
-        document.cookie.split("; ").forEach((e) => {
-          e = e.split("=")[0];
-          (document.cookie =
-            e + "=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/"),
-            ayu.events.emit("onCookieStoreRemoved", e);
+        const cookies = document.cookie.split("; ");
+        cookies.forEach((cookie) => {
+          const cookieName = cookie.split("=")[0];
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+          ayu.events.emit("onCookieStoreRemoved", cookieName);
         });
-      } catch (e) {
-        throw new Error("Error occurred while clearing Cookies:", e);
+      } catch (error) {
+        throw new Error("Error occurred while clearing Cookies:", error);
       }
     },
   },
+
   indexedDB: {
-    setPasscode(e) {
-      GLindexedDBEncryptionKey = e;
+    setPasscode(key) {
+      GLindexedDBEncryptionKey = key;
     },
-    setHmacKey(e) {
-      GLindexedDBHmacKey = e;
+    setHmacKey(key) {
+      GLindexedDBHmacKey = key;
     },
     async setItem({
-      dbName: t,
-      storeName: r,
-      key: o,
-      data: a,
-      compress: n = !0,
-      passcode: i = GLindexedDBEncryptionKey,
-      algo: c = "AES",
-      hmacKey: s = GLindexedDBHmacKey || i,
-      expireAt: m = null,
+      dbName,
+      storeName,
+      key,
+      data,
+      compress = true,
+      passcode = GLindexedDBEncryptionKey,
+      algo = "AES",
+      hmacKey = GLindexedDBHmacKey ? GLindexedDBHmacKey : passcode,
+      expireAt = null,
     }) {
       try {
-        var d = await openDB(t, 1, {
-          upgrade(e) {
-            e.createObjectStore(r);
+        const db = await openDB(dbName, 1, {
+          upgrade(db) {
+            db.createObjectStore(storeName);
           },
         });
-        let e = a;
-        n && (e = pako.deflate(JSON.stringify(a)));
-        var l = encryptData(e, i, c),
-          y = CryptoJS.HmacSHA256(l, s).toString(),
-          S = new Date().getTime(),
-          g = m ? S + m : null,
-          p = d.transaction(r, "readwrite");
-        p
-          .objectStore(r)
-          .put({ data: l, hmac: y, compressed: n, expireTime: g }, o),
-          await p.done,
-          ayu.events.emit(
-            "onIndexedDBSet",
-            JSON.stringify(o),
-            JSON.stringify(a)
-          );
-      } catch (e) {
-        throw new Error("Error occurred while setting IndexedDB item:", e);
+
+        let compressedData = data;
+        if (compress) {
+          compressedData = pako.deflate(JSON.stringify(data));
+        }
+        const encryptedData = encryptData(compressedData, passcode, algo);
+        const hmac = CryptoJS.HmacSHA256(encryptedData, hmacKey).toString();
+
+        const currentTime = new Date().getTime();
+        const expireTime = expireAt ? currentTime + expireAt : null;
+
+        const tx = db.transaction(storeName, "readwrite");
+        const store = tx.objectStore(storeName);
+        store.put(
+          {
+            data: encryptedData,
+            hmac,
+            compressed: compress,
+            expireTime,
+          },
+          key
+        );
+
+        await tx.done;
+
+        ayu.events.emit(
+          "onIndexedDBSet",
+          JSON.stringify(key),
+          JSON.stringify(data)
+        );
+      } catch (error) {
+        throw new Error("Error occurred while setting IndexedDB item:", error);
       }
     },
     async getItem({
-      dbName: e,
-      storeName: t,
-      key: r,
-      passcode: o = GLindexedDBEncryptionKey,
-      algo: a = "AES",
-      hmacKey: n = GLindexedDBHmacKey || o,
+      dbName,
+      storeName,
+      key,
+      passcode = GLindexedDBEncryptionKey,
+      algo = "AES",
+      hmacKey = GLindexedDBHmacKey ? GLindexedDBHmacKey : passcode,
     }) {
       try {
-        var i = (await openDB(e, 1)).transaction(t, "readonly").objectStore(t),
-          c = await i.get(r);
-        if (!c) return null;
-        var { data: s, hmac: m, compressed: d, expireTime: l } = c,
-          y = new Date().getTime();
-        if (null !== l && l < y)
-          return (
-            await i.delete(r), ayu.events.emit("onIndexedDBExpired", r), null
-          );
-        if (CryptoJS.HmacSHA256(s, n).toString() !== m)
+        const db = await openDB(dbName, 1);
+
+        const tx = db.transaction(storeName, "readonly");
+        const store = tx.objectStore(storeName);
+        const item = await store.get(key);
+
+        if (!item) return null;
+
+        const { data, hmac, compressed, expireTime } = item;
+
+        const currentTime = new Date().getTime();
+
+        if (expireTime !== null && currentTime > expireTime) {
+          await store.delete(key);
+          ayu.events.emit("onIndexedDBExpired", key);
+          return null;
+        }
+
+        const calculatedHmac = CryptoJS.HmacSHA256(data, hmacKey).toString();
+        if (calculatedHmac !== hmac) {
           throw new Error(
             "HMAC verification failed of IndexedDB data. Data may have been tampered with."
           );
-        var S = decryptData(s, o, a);
-        return (
-          ayu.events.emit("onIndexedDBGet", r, s),
-          d ? JSON.parse(pako.inflate(S, { to: "string" })) : S
-        );
-      } catch (e) {
-        throw new Error("Error occurred while getting IndexedDB item:", e);
+        }
+
+        const decryptedData = decryptData(data, passcode, algo);
+        ayu.events.emit("onIndexedDBGet", key, data);
+
+        if (compressed) {
+          return JSON.parse(pako.inflate(decryptedData, { to: "string" }));
+        } else {
+          return decryptedData;
+        }
+      } catch (error) {
+        throw new Error("Error occurred while getting IndexedDB item:", error);
       }
     },
-    async removeItem({ dbName: e, storeName: t, key: r }) {
+
+    async removeItem({ dbName, storeName, key }) {
       try {
-        var o = (await openDB(e, 1)).transaction(t, "readwrite");
-        await o.objectStore(t).delete(r),
-          await o.done,
-          ayu.events.emit("onIndexedDBRemove", r, e, t);
-      } catch (e) {
-        throw new Error("Error occurred while removing item:", e);
+        const db = await openDB(dbName, 1);
+        const tx = db.transaction(storeName, "readwrite");
+        const store = tx.objectStore(storeName);
+        await store.delete(key);
+        await tx.done;
+        ayu.events.emit("onIndexedDBRemove", key, dbName, storeName);
+      } catch (error) {
+        throw new Error("Error occurred while removing item:", error);
       }
     },
-    async clear({ dbName: e, storeName: t }) {
+
+    async clear({ dbName, storeName }) {
       try {
-        var r = (await openDB(e, 1)).transaction(t, "readwrite");
-        await r.objectStore(t).clear(),
-          await r.done,
-          ayu.events.emit("onIndexedDBClear", e, t);
-      } catch (e) {
-        throw new Error("Error occurred while clearing IndexedDB:", e);
+        const db = await openDB(dbName, 1);
+        const tx = db.transaction(storeName, "readwrite");
+        const store = tx.objectStore(storeName);
+        await store.clear();
+        await tx.done;
+        ayu.events.emit("onIndexedDBClear", dbName, storeName);
+      } catch (error) {
+        throw new Error("Error occurred while clearing IndexedDB:", error);
       }
     },
-    async deleteDB(e) {
+
+    async deleteDB(dbName) {
       try {
-        await indexedDB.deleteDatabase(e),
-          ayu.events.emit("onIndexedDBDelete", e, storeName);
-      } catch (e) {
-        throw new Error("Error occurred while deleting database:", e);
+        await indexedDB.deleteDatabase(dbName);
+        ayu.events.emit("onIndexedDBDelete", dbName, storeName);
+      } catch (error) {
+        throw new Error("Error occurred while deleting database:", error);
       }
     },
   },
   events: new (require("events").EventEmitter)(),
-  on(e, t) {
-    this.events.on(e, t);
+  on(event, listener) {
+    this.events.on(event, listener);
   },
 };
-function handleStorageChange(e) {
+
+function handleStorageChange(event) {
   try {
-    var t = e.key,
-      r = e.storageArea === localStorage ? "LocalStore" : "SessionStore";
-    null !== t
-      ? (ayu.events.emit("on" + r + "Change", t, e),
-        ("LocalStore" == r ? localStorage : sessionStorage).removeItem(t))
-      : ayu.events.emit("on" + r + "Change", "", e);
-  } catch (e) {
-    throw new Error("Error occurred while handling storage change:", e);
+    const key = event.key;
+    const storageArea =
+      event.storageArea === localStorage ? "LocalStore" : "SessionStore";
+    if (key !== null) {
+      ayu.events.emit("on" + storageArea + "Change", key, event);
+      if (storageArea === "LocalStore") {
+        localStorage.removeItem(key);
+      } else {
+        sessionStorage.removeItem(key);
+      }
+    } else {
+      ayu.events.emit("on" + storageArea + "Change", "", event);
+    }
+  } catch (error) {
+    throw new Error("Error occurred while handling storage change:", error);
   }
 }
-window.addEventListener("storage", handleStorageChange),
-  (module.exports = { ayu: ayu });
+
+window.addEventListener("storage", handleStorageChange);
+
+module.exports = { ayu };
