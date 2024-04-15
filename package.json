@@ -137,5 +137,10 @@
     "crypto-js": "^4.1.1",
     "idb": "^8.0.0",
     "pako": "^2.0.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/abhishekayu/webSecure-storage.git"
+  },
+  "homepage": "https://github.com/abhishekayu/webSecure-storage/blob/main/README.md"
 }
