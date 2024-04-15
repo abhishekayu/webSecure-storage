@@ -1,81 +1,116 @@
 const CryptoJS = require("crypto-js");
-function encryptData(t, r, e) {
-  let p;
-  switch ((e = e ? e.toUpperCase() : "AES")) {
+
+function encryptData(data, key, algorithm) {
+  algorithm = algorithm ? algorithm.toUpperCase() : "AES";
+  let encryptedData;
+  switch (algorithm) {
     case "AES":
-      p = CryptoJS.AES.encrypt(JSON.stringify(t), r).toString();
+      encryptedData = CryptoJS.AES.encrypt(
+        JSON.stringify(data),
+        key
+      ).toString();
       break;
     case "DES":
-      p = CryptoJS.DES.encrypt(JSON.stringify(t), r).toString();
+      encryptedData = CryptoJS.DES.encrypt(
+        JSON.stringify(data),
+        key
+      ).toString();
       break;
     case "TripleDES":
-      p = CryptoJS.TripleDES.encrypt(JSON.stringify(t), r).toString();
+      encryptedData = CryptoJS.TripleDES.encrypt(
+        JSON.stringify(data),
+        key
+      ).toString();
       break;
     case "RC4":
-      p = CryptoJS.RC4.encrypt(JSON.stringify(t), r).toString();
+      encryptedData = CryptoJS.RC4.encrypt(
+        JSON.stringify(data),
+        key
+      ).toString();
       break;
     case "Rabbit":
-      p = CryptoJS.Rabbit.encrypt(JSON.stringify(t), r).toString();
+      encryptedData = CryptoJS.Rabbit.encrypt(
+        JSON.stringify(data),
+        key
+      ).toString();
       break;
     case "RC4Drop":
-      p = CryptoJS.RC4Drop.encrypt(JSON.stringify(t), r).toString();
+      encryptedData = CryptoJS.RC4Drop.encrypt(
+        JSON.stringify(data),
+        key
+      ).toString();
       break;
     case "RabbitLegacy":
-      p = CryptoJS.RabbitLegacy.encrypt(JSON.stringify(t), r).toString();
+      encryptedData = CryptoJS.RabbitLegacy.encrypt(
+        JSON.stringify(data),
+        key
+      ).toString();
       break;
     case "EvpKDF":
-      p = CryptoJS.EvpKDF.encrypt(JSON.stringify(t), r).toString();
+      encryptedData = CryptoJS.EvpKDF.encrypt(
+        JSON.stringify(data),
+        key
+      ).toString();
       break;
     case "PBKDF2":
-      p = CryptoJS.PBKDF2.encrypt(JSON.stringify(t), r).toString();
+      encryptedData = CryptoJS.PBKDF2.encrypt(
+        JSON.stringify(data),
+        key
+      ).toString();
       break;
     default:
       throw new Error("Unsupported encryption algorithm");
   }
-  return p;
+  return encryptedData;
 }
-function decryptData(t, r, e) {
-  let p;
-  switch ((e = e ? e.toUpperCase() : "AES")) {
+
+function decryptData(encryptedData, key, algorithm) {
+  algorithm = algorithm ? algorithm.toUpperCase() : "AES";
+  let decryptedData;
+  switch (algorithm) {
     case "AES":
-      var S = CryptoJS.AES.decrypt(t, r);
-      p = JSON.parse(S.toString(CryptoJS.enc.Utf8));
+      const bytesAES = CryptoJS.AES.decrypt(encryptedData, key);
+      decryptedData = JSON.parse(bytesAES.toString(CryptoJS.enc.Utf8));
       break;
     case "DES":
-      S = CryptoJS.DES.decrypt(t, r);
-      p = JSON.parse(S.toString(CryptoJS.enc.Utf8));
+      const bytesDES = CryptoJS.DES.decrypt(encryptedData, key);
+      decryptedData = JSON.parse(bytesDES.toString(CryptoJS.enc.Utf8));
       break;
     case "TripleDES":
-      S = CryptoJS.TripleDES.decrypt(t, r);
-      p = JSON.parse(S.toString(CryptoJS.enc.Utf8));
+      const bytesTripleDES = CryptoJS.TripleDES.decrypt(encryptedData, key);
+      decryptedData = JSON.parse(bytesTripleDES.toString(CryptoJS.enc.Utf8));
       break;
     case "RC4":
-      S = CryptoJS.RC4.decrypt(t, r);
-      p = JSON.parse(S.toString(CryptoJS.enc.Utf8));
+      const bytesRC4 = CryptoJS.RC4.decrypt(encryptedData, key);
+      decryptedData = JSON.parse(bytesRC4.toString(CryptoJS.enc.Utf8));
       break;
     case "Rabbit":
-      S = CryptoJS.Rabbit.decrypt(t, r);
-      p = JSON.parse(S.toString(CryptoJS.enc.Utf8));
+      const bytesRabbit = CryptoJS.Rabbit.decrypt(encryptedData, key);
+      decryptedData = JSON.parse(bytesRabbit.toString(CryptoJS.enc.Utf8));
       break;
     case "RC4Drop":
-      S = CryptoJS.RC4Drop.decrypt(t, r);
-      p = JSON.parse(S.toString(CryptoJS.enc.Utf8));
+      const bytesRC4Drop = CryptoJS.RC4Drop.decrypt(encryptedData, key);
+      decryptedData = JSON.parse(bytesRC4Drop.toString(CryptoJS.enc.Utf8));
       break;
     case "RabbitLegacy":
-      S = CryptoJS.RabbitLegacy.decrypt(t, r);
-      p = JSON.parse(S.toString(CryptoJS.enc.Utf8));
+      const bytesRabbitLegacy = CryptoJS.RabbitLegacy.decrypt(
+        encryptedData,
+        key
+      );
+      decryptedData = JSON.parse(bytesRabbitLegacy.toString(CryptoJS.enc.Utf8));
       break;
     case "EvpKDF":
-      S = CryptoJS.EvpKDF.decrypt(t, r);
-      p = JSON.parse(S.toString(CryptoJS.enc.Utf8));
+      const bytesEvpKDF = CryptoJS.EvpKDF.decrypt(encryptedData, key);
+      decryptedData = JSON.parse(bytesEvpKDF.toString(CryptoJS.enc.Utf8));
       break;
     case "PBKDF2":
-      S = CryptoJS.PBKDF2.decrypt(t, r);
-      p = JSON.parse(S.toString(CryptoJS.enc.Utf8));
+      const bytesPBKDF2 = CryptoJS.PBKDF2.decrypt(encryptedData, key);
+      decryptedData = JSON.parse(bytesPBKDF2.toString(CryptoJS.enc.Utf8));
       break;
     default:
       throw new Error("Unsupported encryption algorithm");
   }
-  return p;
+  return decryptedData;
 }
-module.exports = { encryptData: encryptData, decryptData: decryptData };
+
+module.exports = { encryptData, decryptData };
